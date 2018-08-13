@@ -16,4 +16,8 @@ actual object Platform {
     actual fun stdoutWriteResponse(resp: CodeGeneratorResponse) =
         if (useJvmProto) BootstrapConverter.toResp(resp).writeTo(System.out)
         else System.out.write(resp.protoMarshal())
+
+    actual fun interfaceIncludesProperty(prop: String, interfaceName: String): Boolean {
+        return Class.forName(interfaceName).kotlin.members.map { it.name }.contains(prop)
+    }
 }

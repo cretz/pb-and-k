@@ -47,7 +47,8 @@ open class FileBuilder(val namer: Namer = Namer.Standard, val supportMaps: Boole
         fields = fieldsFromProto(ctx, msgDesc, usedTypeNames),
         nestedTypes = typesFromProto(ctx, msgDesc.enumType, msgDesc.nestedType),
         mapEntry = supportMaps && msgDesc.options?.mapEntry == true,
-        kotlinTypeName = namer.newTypeName(msgDesc.name!!, usedTypeNames)
+        kotlinTypeName = namer.newTypeName(msgDesc.name!!, usedTypeNames),
+        kotlinImplements = msgDesc.options?.kotlinImplements
     )
 
     protected fun fieldsFromProto(ctx: Context, msgDesc: DescriptorProto, usedTypeNames: MutableSet<String>) =
@@ -56,7 +57,7 @@ open class FileBuilder(val namer: Namer = Namer.Standard, val supportMaps: Boole
             msgDesc.field.mapNotNull { field ->
                 // Exclude any group fields
                 if (field.type == FieldDescriptorProto.Type.TYPE_GROUP) null else field.oneofIndex.let { oneOfIndex ->
-                    if (oneOfIndex == null) fromProto(ctx, field, usedFieldNames)
+                    if (oneOfIndex == null) fromProto(ctx, field, msgDesc, usedFieldNames)
                     else if (seenOneOfIndexes.add(oneOfIndex)) msgDesc.oneofDecl[oneOfIndex].name?.let { name ->
                         val fieldTypeNames = mutableMapOf<String, String>()
                         File.Field.OneOf(
@@ -64,7 +65,7 @@ open class FileBuilder(val namer: Namer = Namer.Standard, val supportMaps: Boole
                             fields = mutableSetOf<String>().let { usedFieldTypeNames ->
                                 msgDesc.field.filter { it.oneofIndex == field.oneofIndex }.map {
                                     fieldTypeNames += it.name!! to namer.newTypeName(it.name!!, usedFieldTypeNames)
-                                    fromProto(ctx, it, mutableSetOf(), true)
+                                    fromProto(ctx, it, msgDesc, mutableSetOf(), true)
                                 }
                             },
                             kotlinFieldTypeNames = fieldTypeNames,
@@ -79,6 +80,7 @@ open class FileBuilder(val namer: Namer = Namer.Standard, val supportMaps: Boole
     protected fun fromProto(
         ctx: Context,
         fieldDesc: FieldDescriptorProto,
+        msgDesc: DescriptorProto,
         usedFieldNames: MutableSet<String>,
         alwaysRequired: Boolean = false
     ) = fromProto(fieldDesc.type ?: error("Missing field type")).let { type ->
@@ -97,8 +99,14 @@ open class FileBuilder(val namer: Namer = Namer.Standard, val supportMaps: Boole
             kotlinFieldName = namer.newFieldName(fieldDesc.name!!, usedFieldNames),
             kotlinLocalTypeName =
                 if (fieldDesc.typeName == null || fieldDesc.typeName!!.startsWith('.')) null
-                else namer.newTypeName(fieldDesc.typeName!!, mutableSetOf())
+                else namer.newTypeName(fieldDesc.typeName!!, mutableSetOf()),
+            kotlinNotnull = fieldDesc.options?.kotlinNotnull == true,
+            overrides = overrides(fieldDesc.name!!, msgDesc.options?.kotlinImplements)
         )
+    }
+
+    private fun overrides(name: String, superinterface: String?): Boolean {
+        return superinterface != null && Platform.interfaceIncludesProperty(name, superinterface)
     }
 
     protected fun fromProto(type: FieldDescriptorProto.Type) = when (type) {

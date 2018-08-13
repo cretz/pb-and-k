@@ -42,12 +42,17 @@ open class CodeGenerator(val file: File, val kotlinTypeMappings: Map<String, Str
 
     protected fun writeMessageType(type: File.Type.Message) {
         var extends = "pbandk.Message<${type.kotlinTypeName}>"
+
+        if (type.kotlinImplements != null) {
+            extends += ", " + type.kotlinImplements
+        }
+
         if (type.mapEntry) extends += ", Map.Entry<${type.mapEntryKeyKotlinType}, ${type.mapEntryValueKotlinType}>"
         line().line("data class ${type.kotlinTypeName}(").indented {
             val fieldBegin = if (type.mapEntry) "override " else ""
             type.fields.forEach { field ->
                 when (field) {
-                    is File.Field.Standard -> lineBegin(fieldBegin).writeConstructorField(field, true).lineEnd(",")
+                    is File.Field.Standard -> lineBegin(fieldBegin).writeConstructorField(field, !field.kotlinNotnull).lineEnd(",")
                     is File.Field.OneOf -> line("val ${field.kotlinFieldName}: ${field.kotlinTypeName}? = null,")
                 }
             }
@@ -70,7 +75,8 @@ open class CodeGenerator(val file: File, val kotlinTypeMappings: Map<String, Str
     }
 
     protected fun writeConstructorField(field: File.Field.Standard, nullableIfMessage: Boolean): CodeGenerator {
-        lineMid("val ${field.kotlinFieldName}: ${field.kotlinValueType(nullableIfMessage)}")
+        val valKeyword = if (field.overrides) "override val" else "val"
+        lineMid("${valKeyword} ${field.kotlinFieldName}: ${field.kotlinValueType(nullableIfMessage)}")
         if (field.type != File.Field.Type.MESSAGE || nullableIfMessage) lineMid(" = ${field.defaultValue}")
         return this
     }
@@ -192,7 +198,7 @@ open class CodeGenerator(val file: File, val kotlinTypeMappings: Map<String, Str
                 when (it) {
                     is File.Field.Standard -> {
                         line(it.unmarshalVarDecl)
-                        it.unmarshalVarDone
+                        it.unmarshalVarDone + if (it.kotlinNotnull) "!!" else ""
                     }
                     is File.Field.OneOf -> {
                         line("var ${it.kotlinFieldName}: $fullTypeName.${it.kotlinTypeName}? = null")

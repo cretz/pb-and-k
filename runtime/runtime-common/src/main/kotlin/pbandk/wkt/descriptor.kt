@@ -282,6 +282,8 @@ data class FileOptions(
     val swiftPrefix: String? = null,
     val phpClassPrefix: String? = null,
     val phpNamespace: String? = null,
+    val phpMetadataNamespace: String? = null,
+    val rubyPackage: String? = null,
     val uninterpretedOption: List<pbandk.wkt.UninterpretedOption> = emptyList(),
     val unknownFields: Map<Int, pbandk.UnknownField> = emptyMap()
 ) : pbandk.Message<FileOptions> {
@@ -314,6 +316,7 @@ data class MessageOptions(
     val deprecated: Boolean? = null,
     val mapEntry: Boolean? = null,
     val uninterpretedOption: List<pbandk.wkt.UninterpretedOption> = emptyList(),
+    val kotlinImplements: String? = null,
     val unknownFields: Map<Int, pbandk.UnknownField> = emptyMap()
 ) : pbandk.Message<MessageOptions> {
     override operator fun plus(other: MessageOptions?) = protoMergeImpl(other)
@@ -332,6 +335,7 @@ data class FieldOptions(
     val deprecated: Boolean? = null,
     val weak: Boolean? = null,
     val uninterpretedOption: List<pbandk.wkt.UninterpretedOption> = emptyList(),
+    val kotlinNotnull: Boolean? = null,
     val unknownFields: Map<Int, pbandk.UnknownField> = emptyMap()
 ) : pbandk.Message<FieldOptions> {
     override operator fun plus(other: FieldOptions?) = protoMergeImpl(other)
@@ -1139,6 +1143,8 @@ private fun FileOptions.protoMergeImpl(plus: FileOptions?): FileOptions = plus?.
     swiftPrefix = plus.swiftPrefix ?: swiftPrefix,
     phpClassPrefix = plus.phpClassPrefix ?: phpClassPrefix,
     phpNamespace = plus.phpNamespace ?: phpNamespace,
+    phpMetadataNamespace = plus.phpMetadataNamespace ?: phpMetadataNamespace,
+    rubyPackage = plus.rubyPackage ?: rubyPackage,
     uninterpretedOption = uninterpretedOption + plus.uninterpretedOption,
     unknownFields = unknownFields + plus.unknownFields
 ) ?: this
@@ -1163,6 +1169,8 @@ private fun FileOptions.protoSizeImpl(): Int {
     if (swiftPrefix != null) protoSize += pbandk.Sizer.tagSize(39) + pbandk.Sizer.stringSize(swiftPrefix)
     if (phpClassPrefix != null) protoSize += pbandk.Sizer.tagSize(40) + pbandk.Sizer.stringSize(phpClassPrefix)
     if (phpNamespace != null) protoSize += pbandk.Sizer.tagSize(41) + pbandk.Sizer.stringSize(phpNamespace)
+    if (phpMetadataNamespace != null) protoSize += pbandk.Sizer.tagSize(44) + pbandk.Sizer.stringSize(phpMetadataNamespace)
+    if (rubyPackage != null) protoSize += pbandk.Sizer.tagSize(45) + pbandk.Sizer.stringSize(rubyPackage)
     if (uninterpretedOption.isNotEmpty()) protoSize += (pbandk.Sizer.tagSize(999) * uninterpretedOption.size) + uninterpretedOption.sumBy(pbandk.Sizer::messageSize)
     protoSize += unknownFields.entries.sumBy { it.value.size() }
     return protoSize
@@ -1187,6 +1195,8 @@ private fun FileOptions.protoMarshalImpl(protoMarshal: pbandk.Marshaller) {
     if (phpClassPrefix != null) protoMarshal.writeTag(322).writeString(phpClassPrefix)
     if (phpNamespace != null) protoMarshal.writeTag(330).writeString(phpNamespace)
     if (phpGenericServices != null) protoMarshal.writeTag(336).writeBool(phpGenericServices)
+    if (phpMetadataNamespace != null) protoMarshal.writeTag(354).writeString(phpMetadataNamespace)
+    if (rubyPackage != null) protoMarshal.writeTag(362).writeString(rubyPackage)
     if (uninterpretedOption.isNotEmpty()) uninterpretedOption.forEach { protoMarshal.writeTag(7994).writeMessage(it) }
     if (unknownFields.isNotEmpty()) protoMarshal.writeUnknownFields(unknownFields)
 }
@@ -1210,13 +1220,16 @@ private fun FileOptions.Companion.protoUnmarshalImpl(protoUnmarshal: pbandk.Unma
     var swiftPrefix: String? = null
     var phpClassPrefix: String? = null
     var phpNamespace: String? = null
+    var phpMetadataNamespace: String? = null
+    var rubyPackage: String? = null
     var uninterpretedOption: pbandk.ListWithSize.Builder<pbandk.wkt.UninterpretedOption>? = null
     while (true) when (protoUnmarshal.readTag()) {
         0 -> return FileOptions(javaPackage, javaOuterClassname, javaMultipleFiles, javaGenerateEqualsAndHash,
             javaStringCheckUtf8, optimizeFor, goPackage, ccGenericServices,
             javaGenericServices, pyGenericServices, phpGenericServices, deprecated,
             ccEnableArenas, objcClassPrefix, csharpNamespace, swiftPrefix,
-            phpClassPrefix, phpNamespace, pbandk.ListWithSize.Builder.fixed(uninterpretedOption), protoUnmarshal.unknownFields())
+            phpClassPrefix, phpNamespace, phpMetadataNamespace, rubyPackage,
+            pbandk.ListWithSize.Builder.fixed(uninterpretedOption), protoUnmarshal.unknownFields())
         10 -> javaPackage = protoUnmarshal.readString()
         66 -> javaOuterClassname = protoUnmarshal.readString()
         72 -> optimizeFor = protoUnmarshal.readEnum(pbandk.wkt.FileOptions.OptimizeMode.Companion)
@@ -1235,6 +1248,8 @@ private fun FileOptions.Companion.protoUnmarshalImpl(protoUnmarshal: pbandk.Unma
         322 -> phpClassPrefix = protoUnmarshal.readString()
         330 -> phpNamespace = protoUnmarshal.readString()
         336 -> phpGenericServices = protoUnmarshal.readBool()
+        354 -> phpMetadataNamespace = protoUnmarshal.readString()
+        362 -> rubyPackage = protoUnmarshal.readString()
         7994 -> uninterpretedOption = protoUnmarshal.readRepeatedMessage(uninterpretedOption, pbandk.wkt.UninterpretedOption.Companion, true)
         else -> protoUnmarshal.unknownField()
     }
@@ -1246,6 +1261,7 @@ private fun MessageOptions.protoMergeImpl(plus: MessageOptions?): MessageOptions
     deprecated = plus.deprecated ?: deprecated,
     mapEntry = plus.mapEntry ?: mapEntry,
     uninterpretedOption = uninterpretedOption + plus.uninterpretedOption,
+    kotlinImplements = plus.kotlinImplements ?: kotlinImplements,
     unknownFields = unknownFields + plus.unknownFields
 ) ?: this
 
@@ -1256,6 +1272,7 @@ private fun MessageOptions.protoSizeImpl(): Int {
     if (deprecated != null) protoSize += pbandk.Sizer.tagSize(3) + pbandk.Sizer.boolSize(deprecated)
     if (mapEntry != null) protoSize += pbandk.Sizer.tagSize(7) + pbandk.Sizer.boolSize(mapEntry)
     if (uninterpretedOption.isNotEmpty()) protoSize += (pbandk.Sizer.tagSize(999) * uninterpretedOption.size) + uninterpretedOption.sumBy(pbandk.Sizer::messageSize)
+    if (kotlinImplements != null) protoSize += pbandk.Sizer.tagSize(51234) + pbandk.Sizer.stringSize(kotlinImplements)
     protoSize += unknownFields.entries.sumBy { it.value.size() }
     return protoSize
 }
@@ -1266,6 +1283,7 @@ private fun MessageOptions.protoMarshalImpl(protoMarshal: pbandk.Marshaller) {
     if (deprecated != null) protoMarshal.writeTag(24).writeBool(deprecated)
     if (mapEntry != null) protoMarshal.writeTag(56).writeBool(mapEntry)
     if (uninterpretedOption.isNotEmpty()) uninterpretedOption.forEach { protoMarshal.writeTag(7994).writeMessage(it) }
+    if (kotlinImplements != null) protoMarshal.writeTag(409874).writeString(kotlinImplements)
     if (unknownFields.isNotEmpty()) protoMarshal.writeUnknownFields(unknownFields)
 }
 
@@ -1275,14 +1293,16 @@ private fun MessageOptions.Companion.protoUnmarshalImpl(protoUnmarshal: pbandk.U
     var deprecated: Boolean? = null
     var mapEntry: Boolean? = null
     var uninterpretedOption: pbandk.ListWithSize.Builder<pbandk.wkt.UninterpretedOption>? = null
+    var kotlinImplements: String? = null
     while (true) when (protoUnmarshal.readTag()) {
         0 -> return MessageOptions(messageSetWireFormat, noStandardDescriptorAccessor, deprecated, mapEntry,
-            pbandk.ListWithSize.Builder.fixed(uninterpretedOption), protoUnmarshal.unknownFields())
+            pbandk.ListWithSize.Builder.fixed(uninterpretedOption), kotlinImplements, protoUnmarshal.unknownFields())
         8 -> messageSetWireFormat = protoUnmarshal.readBool()
         16 -> noStandardDescriptorAccessor = protoUnmarshal.readBool()
         24 -> deprecated = protoUnmarshal.readBool()
         56 -> mapEntry = protoUnmarshal.readBool()
         7994 -> uninterpretedOption = protoUnmarshal.readRepeatedMessage(uninterpretedOption, pbandk.wkt.UninterpretedOption.Companion, true)
+        409874 -> kotlinImplements = protoUnmarshal.readString()
         else -> protoUnmarshal.unknownField()
     }
 }
@@ -1295,6 +1315,7 @@ private fun FieldOptions.protoMergeImpl(plus: FieldOptions?): FieldOptions = plu
     deprecated = plus.deprecated ?: deprecated,
     weak = plus.weak ?: weak,
     uninterpretedOption = uninterpretedOption + plus.uninterpretedOption,
+    kotlinNotnull = plus.kotlinNotnull ?: kotlinNotnull,
     unknownFields = unknownFields + plus.unknownFields
 ) ?: this
 
@@ -1307,6 +1328,7 @@ private fun FieldOptions.protoSizeImpl(): Int {
     if (deprecated != null) protoSize += pbandk.Sizer.tagSize(3) + pbandk.Sizer.boolSize(deprecated)
     if (weak != null) protoSize += pbandk.Sizer.tagSize(10) + pbandk.Sizer.boolSize(weak)
     if (uninterpretedOption.isNotEmpty()) protoSize += (pbandk.Sizer.tagSize(999) * uninterpretedOption.size) + uninterpretedOption.sumBy(pbandk.Sizer::messageSize)
+    if (kotlinNotnull != null) protoSize += pbandk.Sizer.tagSize(51235) + pbandk.Sizer.boolSize(kotlinNotnull)
     protoSize += unknownFields.entries.sumBy { it.value.size() }
     return protoSize
 }
@@ -1319,6 +1341,7 @@ private fun FieldOptions.protoMarshalImpl(protoMarshal: pbandk.Marshaller) {
     if (jstype != null) protoMarshal.writeTag(48).writeEnum(jstype)
     if (weak != null) protoMarshal.writeTag(80).writeBool(weak)
     if (uninterpretedOption.isNotEmpty()) uninterpretedOption.forEach { protoMarshal.writeTag(7994).writeMessage(it) }
+    if (kotlinNotnull != null) protoMarshal.writeTag(409880).writeBool(kotlinNotnull)
     if (unknownFields.isNotEmpty()) protoMarshal.writeUnknownFields(unknownFields)
 }
 
@@ -1330,9 +1353,10 @@ private fun FieldOptions.Companion.protoUnmarshalImpl(protoUnmarshal: pbandk.Unm
     var deprecated: Boolean? = null
     var weak: Boolean? = null
     var uninterpretedOption: pbandk.ListWithSize.Builder<pbandk.wkt.UninterpretedOption>? = null
+    var kotlinNotnull: Boolean? = null
     while (true) when (protoUnmarshal.readTag()) {
         0 -> return FieldOptions(ctype, packed, jstype, lazy,
-            deprecated, weak, pbandk.ListWithSize.Builder.fixed(uninterpretedOption), protoUnmarshal.unknownFields())
+            deprecated, weak, pbandk.ListWithSize.Builder.fixed(uninterpretedOption), kotlinNotnull, protoUnmarshal.unknownFields())
         8 -> ctype = protoUnmarshal.readEnum(pbandk.wkt.FieldOptions.CType.Companion)
         16 -> packed = protoUnmarshal.readBool()
         24 -> deprecated = protoUnmarshal.readBool()
@@ -1340,6 +1364,7 @@ private fun FieldOptions.Companion.protoUnmarshalImpl(protoUnmarshal: pbandk.Unm
         48 -> jstype = protoUnmarshal.readEnum(pbandk.wkt.FieldOptions.JSType.Companion)
         80 -> weak = protoUnmarshal.readBool()
         7994 -> uninterpretedOption = protoUnmarshal.readRepeatedMessage(uninterpretedOption, pbandk.wkt.UninterpretedOption.Companion, true)
+        409880 -> kotlinNotnull = protoUnmarshal.readBool()
         else -> protoUnmarshal.unknownField()
     }
 }

@@ -35,7 +35,8 @@ data class File(
             val fields: List<Field>,
             val nestedTypes: List<Type>,
             val mapEntry: Boolean,
-            override val kotlinTypeName: String
+            override val kotlinTypeName: String,
+            val kotlinImplements: String?
         ) : Type()
 
         data class Enum(
@@ -64,7 +65,9 @@ data class File(
             val map: Boolean,
             override val kotlinFieldName: String,
             // This can be null when localTypeName is not null which means it is fully qualified and should be looked up
-            val kotlinLocalTypeName: String?
+            val kotlinLocalTypeName: String?,
+            val kotlinNotnull: Boolean,
+            val overrides: Boolean
         ) : Field()
 
         data class OneOf(

@@ -18,6 +18,7 @@ allprojects {
 
     repositories {
         mavenCentral()
+        mavenLocal()
     }
 }
 
@@ -98,6 +99,7 @@ project(':protoc-gen-kotlin:protoc-gen-kotlin-common') {
     apply plugin: 'kotlin-platform-common'
     dependencies {
         compile project(':runtime:runtime-common')
+        compile "com.toasttab.domain:toast-domain-stubs:1.0.0-SNAPSHOT"
         compile "org.jetbrains.kotlin:kotlin-stdlib-common:$kotlin_version"
         testCompile "org.jetbrains.kotlin:kotlin-test-annotations-common:$kotlin_version"
         testCompile "org.jetbrains.kotlin:kotlin-test-common:$kotlin_version"
@@ -127,6 +129,7 @@ project(':protoc-gen-kotlin:protoc-gen-kotlin-jvm') {
         expectedBy project(':protoc-gen-kotlin:protoc-gen-kotlin-common')
         compile project(':runtime:runtime-jvm')
         compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+        compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
         testCompile 'junit:junit:4.12'
         testCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
         testCompile "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
