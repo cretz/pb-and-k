@@ -8,5 +8,5 @@ expect object Platform {
     fun stdinReadRequest(): CodeGeneratorRequest
     fun stdoutWriteResponse(resp: CodeGeneratorResponse)
 
-    fun interfaceIncludesProperty(prop: String, interfaceName: String): Boolean
+    fun interfaceIncludesProperty(ctx: FileBuilder.Context, prop: String, interfaceName: String): Boolean
 }

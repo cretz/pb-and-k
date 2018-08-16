@@ -101,12 +101,12 @@ open class FileBuilder(val namer: Namer = Namer.Standard, val supportMaps: Boole
                 if (fieldDesc.typeName == null || fieldDesc.typeName!!.startsWith('.')) null
                 else namer.newTypeName(fieldDesc.typeName!!, mutableSetOf()),
             kotlinNotnull = fieldDesc.options?.kotlinNotnull == true,
-            overrides = overrides(fieldDesc.name!!, msgDesc.options?.kotlinImplements)
+            overrides = overrides(ctx, fieldDesc.name!!, msgDesc.options?.kotlinImplements)
         )
     }
 
-    private fun overrides(name: String, superinterface: String?): Boolean {
-        return superinterface != null && Platform.interfaceIncludesProperty(name, superinterface)
+    private fun overrides(ctx: Context, name: String, superinterface: String?): Boolean {
+        return superinterface != null && Platform.interfaceIncludesProperty(ctx, name, superinterface)
     }
 
     protected fun fromProto(type: FieldDescriptorProto.Type) = when (type) {
