@@ -1,0 +1,12 @@
+apply plugin: 'konan'
+konanArtifacts {
+    program('protoc-gen-kotlin-native') {
+        enableMultiplatform true
+        libraries {
+            allLibrariesFrom project(':runtime:runtime-native')
+        }
+    }
+}
+dependencies {
+    expectedBy project(':protoc-gen-kotlin:protoc-gen-kotlin-common')
+}

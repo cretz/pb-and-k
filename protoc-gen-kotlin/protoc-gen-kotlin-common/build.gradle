@@ -1,0 +1,14 @@
+apply plugin: 'kotlin-platform-common'
+dependencies {
+    compile project(':runtime:runtime-common')
+    compile "org.jetbrains.kotlin:kotlin-stdlib-common:$kotlin_version"
+    testCompile "org.jetbrains.kotlin:kotlin-test-annotations-common:$kotlin_version"
+    testCompile "org.jetbrains.kotlin:kotlin-test-common:$kotlin_version"
+}
+
+task generateProto {
+    dependsOn ':protoc-gen-kotlin:protoc-gen-kotlin-jvm:installDist'
+    doFirst {
+        runProtoGen('src/main/proto', 'src/main/kotlin', 'pbandk.gen.pb', 'debug')
+    }
+}

@@ -1,0 +1,9 @@
+apply plugin: 'konan'
+konanArtifacts {
+    library('pbandk') {
+        enableMultiplatform true
+    }
+}
+dependencies {
+    expectedBy project(':runtime:runtime-common')
+}

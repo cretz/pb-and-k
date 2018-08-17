@@ -1,0 +1,12 @@
+apply plugin: 'konan'
+konanArtifacts {
+    program('pbandk-conformance') {
+        enableMultiplatform true
+        libraries {
+            allLibrariesFrom project(':runtime:runtime-native')
+        }
+    }
+}
+dependencies {
+    expectedBy project(':conformance:conformance-common')
+}
