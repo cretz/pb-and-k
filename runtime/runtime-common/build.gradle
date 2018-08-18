@@ -15,3 +15,12 @@ task generateWellKnownTypes {
         runProtoGen(Paths.get(protocPath, 'include').toString(), 'src/main/kotlin', 'pbandk.wkt', 'debug', 'google/protobuf')
     }
 }
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from project.components.java
+            artifactId = "pbandk-${project.name}"
+        }
+    }
+}

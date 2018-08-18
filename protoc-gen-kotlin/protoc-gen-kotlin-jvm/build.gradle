@@ -33,6 +33,7 @@ publishing {
     publications {
         dist(MavenPublication) {
             artifact source: distZip, extension: 'zip', classifier: 'dist'
+            artifactId = "pbandk-${project.name}"
         }
     }
 }

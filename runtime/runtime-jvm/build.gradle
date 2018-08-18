@@ -9,7 +9,7 @@ compileTestKotlin {
 dependencies {
     expectedBy project(':runtime:runtime-common')
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    compile 'com.google.protobuf:protobuf-java:3.5.1'
+    compile 'com.google.protobuf:protobuf-java:3.6.1'
     testCompile 'junit:junit:4.12'
     testCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
     testCompile "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
@@ -20,5 +20,14 @@ test {
         showStandardStreams = true
         exceptionFormat = 'full'
         events 'passed', 'skipped', 'failed'
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+           from project.components.java
+           artifactId = "pbandk-${project.name}"
+        }
     }
 }
