@@ -20,6 +20,8 @@ allprojects {
         mavenCentral()
         mavenLocal()
     }
+
+    apply plugin: 'maven-publish'
 }
 
 import java.nio.file.Paths

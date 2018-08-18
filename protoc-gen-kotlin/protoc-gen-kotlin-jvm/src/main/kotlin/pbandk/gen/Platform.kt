@@ -4,6 +4,8 @@ import com.google.protobuf.compiler.PluginProtos
 import pbandk.gen.pb.CodeGeneratorRequest
 import pbandk.gen.pb.CodeGeneratorResponse
 import java.io.File
+import java.io.PrintWriter
+import java.io.StringWriter
 import java.net.URLClassLoader
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
@@ -33,11 +35,9 @@ object PropertyOverrideChecker {
 
     private fun getClassLoader(classpath: String): ClassLoader {
         return classloaderCache.computeIfAbsent(classpath) { classPathString ->
-            val current = Thread.currentThread().contextClassLoader
-
             when {
-                classpath.isEmpty() -> current
-                else -> URLClassLoader(classPathString.split(File.pathSeparatorChar).map { p -> File(p).toURI().toURL() }.toTypedArray(), current)
+                classpath.isEmpty() -> javaClass.classLoader
+                else -> URLClassLoader(classPathString.split(';').map { p -> File(p).toURI().toURL() }.toTypedArray())
             }
         }
     }

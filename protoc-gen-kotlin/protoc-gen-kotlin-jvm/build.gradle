@@ -9,8 +9,6 @@ compileTestKotlin {
     kotlinOptions.jvmTarget = '1.8'
 }
 
-
-
 mainClassName = 'pbandk.gen.MainKt'
 applicationName = 'protoc-gen-kotlin'
 dependencies {
@@ -28,5 +26,13 @@ test {
         showStandardStreams = true
         exceptionFormat = 'full'
         events 'passed', 'skipped', 'failed'
+    }
+}
+
+publishing {
+    publications {
+        dist(MavenPublication) {
+            artifact source: distZip, extension: 'zip', classifier: 'dist'
+        }
     }
 }
