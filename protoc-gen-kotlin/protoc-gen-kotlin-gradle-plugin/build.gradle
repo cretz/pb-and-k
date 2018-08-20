@@ -1,0 +1,19 @@
+apply plugin: 'groovy'
+
+processResources {
+    expand 'version': "${version}"
+}
+
+dependencies {
+    compile gradleApi()
+    compile "com.google.protobuf:protobuf-gradle-plugin:0.8.5"
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from project.components.java
+            artifactId = "pbandk-${project.name}"
+        }
+    }
+}
