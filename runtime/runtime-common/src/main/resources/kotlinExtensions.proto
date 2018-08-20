@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+import "google/protobuf/descriptor.proto";
+
+// to be used by the compiler to inject interfaces into the generated models
+extend google.protobuf.MessageOptions {
+    string kotlinImplements = 51234;
+}
+
+// to be used by the compiler to mark Kotlin props required
+extend google.protobuf.FieldOptions {
+    bool kotlinNotnull = 51235;
+}
