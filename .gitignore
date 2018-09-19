@@ -1,5 +1,5 @@
+*.DS_Store
 /pb-and-k.iml
-/gradle*
 .gradle
 .idea
 build
