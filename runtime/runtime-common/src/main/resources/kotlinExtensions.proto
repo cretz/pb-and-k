@@ -10,4 +10,6 @@ extend google.protobuf.MessageOptions {
 // to be used by the compiler to mark Kotlin props required
 extend google.protobuf.FieldOptions {
     bool kotlinNotnull = 51235;
+    string kotlinBytesWrapper = 51236;
+    bool kotlinDate = 51237;
 }

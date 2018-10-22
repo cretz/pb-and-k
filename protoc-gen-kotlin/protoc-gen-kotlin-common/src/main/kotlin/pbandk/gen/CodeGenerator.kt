@@ -75,7 +75,7 @@ open class CodeGenerator(val file: File, val kotlinTypeMappings: Map<String, Str
     }
 
     protected fun writeConstructorField(field: File.Field.Standard, nullableIfMessage: Boolean): CodeGenerator {
-        val valKeyword = if (field.overrides) "override val" else "val"
+        val valKeyword = if (field.implementsInterfaceProperty) "override val" else "val"
         lineMid("${valKeyword} ${field.kotlinFieldName}: ${field.kotlinValueType(nullableIfMessage)}")
         if (field.type != File.Field.Type.MESSAGE || nullableIfMessage) lineMid(" = ${field.defaultValue}")
         return this
@@ -278,7 +278,8 @@ open class CodeGenerator(val file: File, val kotlinTypeMappings: Map<String, Str
     protected val File.Field.Standard.kotlinQualifiedTypeName get() =
         kotlinLocalTypeName ?:
             localTypeName?.let { kotlinTypeMappings.getOrElse(it) { error("Unable to find mapping for $it") } } ?:
-            type.standardTypeName
+        (kotlinBytesWrapper ?: type.standardTypeName)
+
     protected val File.Field.Standard.unmarshalReadExpr get() = type.neverPacked.let { neverPacked ->
         val repEnd = if (neverPacked) ", true" else ", false"
         when (type) {
@@ -291,6 +292,7 @@ open class CodeGenerator(val file: File, val kotlinTypeMappings: Map<String, Str
                 else "protoUnmarshal.readRepeatedMessage($kotlinFieldName, $kotlinQualifiedTypeName.Companion$repEnd)"
             else -> {
                 if (repeated) "protoUnmarshal.readRepeated($kotlinFieldName, protoUnmarshal::${type.readMethod}$repEnd)"
+                else if (kotlinBytesWrapper != null)  "$kotlinBytesWrapper(protoUnmarshal.${type.readMethod}())"
                 else "protoUnmarshal.${type.readMethod}()"
             }
         }
@@ -320,6 +322,7 @@ open class CodeGenerator(val file: File, val kotlinTypeMappings: Map<String, Str
         repeated -> "emptyList()"
         file.version == 2 && optional -> "null"
         type == File.Field.Type.ENUM -> "$kotlinQualifiedTypeName.fromValue(0)"
+        type == File.Field.Type.BYTES && kotlinBytesWrapper != null -> "$kotlinBytesWrapper(${File.Field.Type.BYTES.defaultValue})"
         else -> type.defaultValue
     }
     protected val File.Field.Standard.tag get() = (number shl 3) or when {
@@ -333,8 +336,8 @@ open class CodeGenerator(val file: File, val kotlinTypeMappings: Map<String, Str
             "pbandk.Sizer.tagSize($number) + pbandk.Sizer.packedRepeatedSize($ref, pbandk.Sizer::${type.sizeMethod})"
         repeated ->
             "(pbandk.Sizer.tagSize($number) * $ref.size) + $ref.sumBy(pbandk.Sizer::${type.sizeMethod})"
-        else ->
-            "pbandk.Sizer.tagSize($number) + pbandk.Sizer.${type.sizeMethod}($ref)"
+        kotlinBytesWrapper != null -> "pbandk.Sizer.tagSize($number) + pbandk.Sizer.${type.sizeMethod}($ref.bytes)"
+        else -> "pbandk.Sizer.tagSize($number) + pbandk.Sizer.${type.sizeMethod}($ref)"
     }
     protected fun File.Field.Standard.writeExpr(ref: String = fieldRef) = when {
         map ->
@@ -343,12 +346,18 @@ open class CodeGenerator(val file: File, val kotlinTypeMappings: Map<String, Str
             "protoMarshal.writeTag($tag).writePackedRepeated(" +
                 "$ref, pbandk.Sizer::${type.sizeMethod}, protoMarshal::${type.writeMethod})"
         repeated -> "$ref.forEach { protoMarshal.writeTag($tag).${type.writeMethod}(it) }"
+        kotlinBytesWrapper != null -> "protoMarshal.writeTag($tag).${type.writeMethod}($ref.bytes)"
         else -> "protoMarshal.writeTag($tag).${type.writeMethod}($ref)"
     }
     protected val File.Field.Standard.nonDefaultCheckExpr get() = when {
         repeated -> "$fieldRef.isNotEmpty()"
         file.version == 2 && optional -> "$fieldRef != null"
-        else -> type.nonDefaultCheck(fieldRef)
+        type == File.Field.Type.BOOL -> fieldRef
+        type == File.Field.Type.BYTES && kotlinBytesWrapper == null -> "$fieldRef.array.isNotEmpty()"
+        type == File.Field.Type.BYTES && kotlinBytesWrapper != null -> "$fieldRef.bytes.array.isNotEmpty()"
+        type == File.Field.Type.ENUM -> "$fieldRef.value != 0"
+        type == File.Field.Type.STRING -> "$fieldRef.isNotEmpty()"
+        else -> "$fieldRef != ${type.defaultValue}"
     }
     protected val File.Field.Standard.requiresExplicitTypeWithVal get() =
         repeated || (file.version == 2 && optional) || type.requiresExplicitTypeWithVal
@@ -416,11 +425,5 @@ open class CodeGenerator(val file: File, val kotlinTypeMappings: Map<String, Str
     }
     protected val File.Field.Type.requiresExplicitTypeWithVal get() =
         this == File.Field.Type.BYTES || this == File.Field.Type.ENUM || this == File.Field.Type.MESSAGE
-    protected fun File.Field.Type.nonDefaultCheck(varName: String) = when (this) {
-        File.Field.Type.BOOL -> varName
-        File.Field.Type.BYTES -> "$varName.array.isNotEmpty()"
-        File.Field.Type.ENUM -> "$varName.value != 0"
-        File.Field.Type.STRING -> "$varName.isNotEmpty()"
-        else -> "$varName != $defaultValue"
-    }
+
 }

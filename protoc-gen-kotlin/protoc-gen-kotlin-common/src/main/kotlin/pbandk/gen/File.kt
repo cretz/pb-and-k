@@ -67,7 +67,9 @@ data class File(
             // This can be null when localTypeName is not null which means it is fully qualified and should be looked up
             val kotlinLocalTypeName: String?,
             val kotlinNotnull: Boolean,
-            val overrides: Boolean
+            val kotlinBytesWrapper: String?,
+            val kotlinDate: Boolean,
+            val implementsInterfaceProperty: Boolean
         ) : Field()
 
         data class OneOf(

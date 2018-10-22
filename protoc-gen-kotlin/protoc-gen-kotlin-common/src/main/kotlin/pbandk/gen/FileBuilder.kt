@@ -101,7 +101,9 @@ open class FileBuilder(val namer: Namer = Namer.Standard, val supportMaps: Boole
                 if (fieldDesc.typeName == null || fieldDesc.typeName!!.startsWith('.')) null
                 else namer.newTypeName(fieldDesc.typeName!!, mutableSetOf()),
             kotlinNotnull = fieldDesc.options?.kotlinNotnull == true,
-            overrides = overrides(ctx, fieldDesc.name!!, msgDesc.options?.kotlinImplements)
+            kotlinDate = fieldDesc.options?.kotlinDate == true,
+            kotlinBytesWrapper = fieldDesc.options?.kotlinBytesWrapper,
+            implementsInterfaceProperty = overrides(ctx, fieldDesc.name!!, msgDesc.options?.kotlinImplements)
         )
     }
 
