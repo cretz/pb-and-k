@@ -101,10 +101,12 @@ open class FileBuilder(val namer: Namer = Namer.Standard, val supportMaps: Boole
             kotlinLocalTypeName =
                 if (fieldDesc.typeName == null || fieldDesc.typeName!!.startsWith('.')) null
                 else namer.newTypeName(fieldDesc.typeName!!, mutableSetOf()),
-            kotlinNotnull = fieldDesc.options?.kotlinNotnull == true,
-            kotlinDate = fieldDesc.options?.kotlinDate == true,
-            kotlinWrapperType = fieldDesc.options?.kotlinWrapperType,
-            implementsInterfaceProperty = overrides(ctx, kotlinFieldName, msgDesc.options?.kotlinImplements)
+            options = File.Field.KotlinFieldOptions(
+                notnull = fieldDesc.options?.kotlinNotnull == true,
+                kotlinDate = fieldDesc.options?.kotlinDate == true,
+                kotlinWrapperType = fieldDesc.options?.kotlinWrapperType,
+                implementsInterfaceProperty = overrides(ctx, kotlinFieldName, msgDesc.options?.kotlinImplements)
+            )
         )
     }
 

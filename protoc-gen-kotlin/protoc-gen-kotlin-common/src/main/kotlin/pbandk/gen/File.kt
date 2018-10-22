@@ -66,10 +66,7 @@ data class File(
             override val kotlinFieldName: String,
             // This can be null when localTypeName is not null which means it is fully qualified and should be looked up
             val kotlinLocalTypeName: String?,
-            val kotlinNotnull: Boolean,
-            val kotlinWrapperType: String?,
-            val kotlinDate: Boolean,
-            val implementsInterfaceProperty: Boolean
+            val options: KotlinFieldOptions
         ) : Field()
 
         data class OneOf(
@@ -87,6 +84,17 @@ data class File(
             val neverPacked get() =
                 this == File.Field.Type.BOOL  || this == File.Field.Type.BYTES || this == File.Field.Type.ENUM ||
                 this == File.Field.Type.MESSAGE || this == File.Field.Type.STRING
+        }
+
+        class KotlinFieldOptions (
+            val notnull: Boolean,
+            private val kotlinWrapperType: String?,
+            private val kotlinDate: Boolean,
+            val implementsInterfaceProperty: Boolean
+        ) {
+            val wrapper get() = kotlinDate || kotlinWrapperType != null
+            val wrapperType get() = if (kotlinDate) "java.util.Date" else kotlinWrapperType
+            val wrapperValueProperty get() = if (kotlinDate) "time" else "value"
         }
     }
 }
