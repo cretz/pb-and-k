@@ -84,6 +84,7 @@ open class FileBuilder(val namer: Namer = Namer.Standard, val supportMaps: Boole
         usedFieldNames: MutableSet<String>,
         alwaysRequired: Boolean = false
     ) = fromProto(fieldDesc.type ?: error("Missing field type")).let { type ->
+        val kotlinFieldName = namer.newFieldName(fieldDesc.name!!, usedFieldNames)
         File.Field.Standard(
             number = fieldDesc.number!!,
             name = fieldDesc.name!!,
@@ -96,14 +97,14 @@ open class FileBuilder(val namer: Namer = Namer.Standard, val supportMaps: Boole
                 fieldDesc.label == FieldDescriptorProto.Label.LABEL_REPEATED &&
                 fieldDesc.type == FieldDescriptorProto.Type.TYPE_MESSAGE &&
                 ctx.findLocalMessage(fieldDesc.typeName!!)?.options?.mapEntry == true,
-            kotlinFieldName = namer.newFieldName(fieldDesc.name!!, usedFieldNames),
+            kotlinFieldName = kotlinFieldName,
             kotlinLocalTypeName =
                 if (fieldDesc.typeName == null || fieldDesc.typeName!!.startsWith('.')) null
                 else namer.newTypeName(fieldDesc.typeName!!, mutableSetOf()),
             kotlinNotnull = fieldDesc.options?.kotlinNotnull == true,
             kotlinDate = fieldDesc.options?.kotlinDate == true,
             kotlinWrapperType = fieldDesc.options?.kotlinWrapperType,
-            implementsInterfaceProperty = overrides(ctx, fieldDesc.name!!, msgDesc.options?.kotlinImplements)
+            implementsInterfaceProperty = overrides(ctx, kotlinFieldName, msgDesc.options?.kotlinImplements)
         )
     }
 
