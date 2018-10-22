@@ -2,6 +2,7 @@ apply plugin: 'groovy'
 
 processResources {
     expand 'version': "${version}"
+    inputs.property('version', "${version}")
 }
 
 dependencies {
