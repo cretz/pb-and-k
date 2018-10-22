@@ -336,6 +336,8 @@ data class FieldOptions(
     val weak: Boolean? = null,
     val uninterpretedOption: List<pbandk.wkt.UninterpretedOption> = emptyList(),
     val kotlinNotnull: Boolean? = null,
+    val kotlinBytesWrapper: String? = null,
+    val kotlinDate: Boolean? = null,
     val unknownFields: Map<Int, pbandk.UnknownField> = emptyMap()
 ) : pbandk.Message<FieldOptions> {
     override operator fun plus(other: FieldOptions?) = protoMergeImpl(other)
@@ -1316,6 +1318,8 @@ private fun FieldOptions.protoMergeImpl(plus: FieldOptions?): FieldOptions = plu
     weak = plus.weak ?: weak,
     uninterpretedOption = uninterpretedOption + plus.uninterpretedOption,
     kotlinNotnull = plus.kotlinNotnull ?: kotlinNotnull,
+    kotlinBytesWrapper = plus.kotlinBytesWrapper ?: kotlinBytesWrapper,
+    kotlinDate = plus.kotlinDate ?: kotlinDate,
     unknownFields = unknownFields + plus.unknownFields
 ) ?: this
 
@@ -1329,6 +1333,8 @@ private fun FieldOptions.protoSizeImpl(): Int {
     if (weak != null) protoSize += pbandk.Sizer.tagSize(10) + pbandk.Sizer.boolSize(weak)
     if (uninterpretedOption.isNotEmpty()) protoSize += (pbandk.Sizer.tagSize(999) * uninterpretedOption.size) + uninterpretedOption.sumBy(pbandk.Sizer::messageSize)
     if (kotlinNotnull != null) protoSize += pbandk.Sizer.tagSize(51235) + pbandk.Sizer.boolSize(kotlinNotnull)
+    if (kotlinBytesWrapper != null) protoSize += pbandk.Sizer.tagSize(51236) + pbandk.Sizer.stringSize(kotlinBytesWrapper)
+    if (kotlinDate != null) protoSize += pbandk.Sizer.tagSize(51237) + pbandk.Sizer.boolSize(kotlinDate)
     protoSize += unknownFields.entries.sumBy { it.value.size() }
     return protoSize
 }
@@ -1342,6 +1348,8 @@ private fun FieldOptions.protoMarshalImpl(protoMarshal: pbandk.Marshaller) {
     if (weak != null) protoMarshal.writeTag(80).writeBool(weak)
     if (uninterpretedOption.isNotEmpty()) uninterpretedOption.forEach { protoMarshal.writeTag(7994).writeMessage(it) }
     if (kotlinNotnull != null) protoMarshal.writeTag(409880).writeBool(kotlinNotnull)
+    if (kotlinBytesWrapper != null) protoMarshal.writeTag(409890).writeString(kotlinBytesWrapper)
+    if (kotlinDate != null) protoMarshal.writeTag(409896).writeBool(kotlinDate)
     if (unknownFields.isNotEmpty()) protoMarshal.writeUnknownFields(unknownFields)
 }
 
@@ -1354,9 +1362,12 @@ private fun FieldOptions.Companion.protoUnmarshalImpl(protoUnmarshal: pbandk.Unm
     var weak: Boolean? = null
     var uninterpretedOption: pbandk.ListWithSize.Builder<pbandk.wkt.UninterpretedOption>? = null
     var kotlinNotnull: Boolean? = null
+    var kotlinBytesWrapper: String? = null
+    var kotlinDate: Boolean? = null
     while (true) when (protoUnmarshal.readTag()) {
         0 -> return FieldOptions(ctype, packed, jstype, lazy,
-            deprecated, weak, pbandk.ListWithSize.Builder.fixed(uninterpretedOption), kotlinNotnull, protoUnmarshal.unknownFields())
+            deprecated, weak, pbandk.ListWithSize.Builder.fixed(uninterpretedOption), kotlinNotnull,
+            kotlinBytesWrapper, kotlinDate, protoUnmarshal.unknownFields())
         8 -> ctype = protoUnmarshal.readEnum(pbandk.wkt.FieldOptions.CType.Companion)
         16 -> packed = protoUnmarshal.readBool()
         24 -> deprecated = protoUnmarshal.readBool()
@@ -1365,6 +1376,8 @@ private fun FieldOptions.Companion.protoUnmarshalImpl(protoUnmarshal: pbandk.Unm
         80 -> weak = protoUnmarshal.readBool()
         7994 -> uninterpretedOption = protoUnmarshal.readRepeatedMessage(uninterpretedOption, pbandk.wkt.UninterpretedOption.Companion, true)
         409880 -> kotlinNotnull = protoUnmarshal.readBool()
+        409890 -> kotlinBytesWrapper = protoUnmarshal.readString()
+        409896 -> kotlinDate = protoUnmarshal.readBool()
         else -> protoUnmarshal.unknownField()
     }
 }
