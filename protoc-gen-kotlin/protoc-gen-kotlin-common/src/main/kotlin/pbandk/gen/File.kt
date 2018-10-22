@@ -67,7 +67,7 @@ data class File(
             // This can be null when localTypeName is not null which means it is fully qualified and should be looked up
             val kotlinLocalTypeName: String?,
             val kotlinNotnull: Boolean,
-            val kotlinBytesWrapper: String?,
+            val kotlinWrapperType: String?,
             val kotlinDate: Boolean,
             val implementsInterfaceProperty: Boolean
         ) : Field()

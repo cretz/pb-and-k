@@ -102,7 +102,7 @@ open class FileBuilder(val namer: Namer = Namer.Standard, val supportMaps: Boole
                 else namer.newTypeName(fieldDesc.typeName!!, mutableSetOf()),
             kotlinNotnull = fieldDesc.options?.kotlinNotnull == true,
             kotlinDate = fieldDesc.options?.kotlinDate == true,
-            kotlinBytesWrapper = fieldDesc.options?.kotlinBytesWrapper,
+            kotlinWrapperType = fieldDesc.options?.kotlinWrapperType,
             implementsInterfaceProperty = overrides(ctx, fieldDesc.name!!, msgDesc.options?.kotlinImplements)
         )
     }

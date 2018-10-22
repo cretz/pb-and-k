@@ -278,7 +278,7 @@ open class CodeGenerator(val file: File, val kotlinTypeMappings: Map<String, Str
     protected val File.Field.Standard.kotlinQualifiedTypeName get() =
         kotlinLocalTypeName ?:
             localTypeName?.let { kotlinTypeMappings.getOrElse(it) { error("Unable to find mapping for $it") } } ?:
-        (kotlinBytesWrapper ?: type.standardTypeName)
+        (kotlinWrapperType ?: type.standardTypeName)
 
     protected val File.Field.Standard.unmarshalReadExpr get() = type.neverPacked.let { neverPacked ->
         val repEnd = if (neverPacked) ", true" else ", false"
@@ -292,7 +292,7 @@ open class CodeGenerator(val file: File, val kotlinTypeMappings: Map<String, Str
                 else "protoUnmarshal.readRepeatedMessage($kotlinFieldName, $kotlinQualifiedTypeName.Companion$repEnd)"
             else -> {
                 if (repeated) "protoUnmarshal.readRepeated($kotlinFieldName, protoUnmarshal::${type.readMethod}$repEnd)"
-                else if (kotlinBytesWrapper != null)  "$kotlinBytesWrapper(protoUnmarshal.${type.readMethod}())"
+                else if (kotlinWrapperType != null)  "$kotlinWrapperType(protoUnmarshal.${type.readMethod}())"
                 else "protoUnmarshal.${type.readMethod}()"
             }
         }
@@ -322,7 +322,7 @@ open class CodeGenerator(val file: File, val kotlinTypeMappings: Map<String, Str
         repeated -> "emptyList()"
         file.version == 2 && optional -> "null"
         type == File.Field.Type.ENUM -> "$kotlinQualifiedTypeName.fromValue(0)"
-        type == File.Field.Type.BYTES && kotlinBytesWrapper != null -> "$kotlinBytesWrapper(${File.Field.Type.BYTES.defaultValue})"
+        kotlinWrapperType != null -> "$kotlinWrapperType(${type.defaultValue})"
         else -> type.defaultValue
     }
     protected val File.Field.Standard.tag get() = (number shl 3) or when {
@@ -336,7 +336,7 @@ open class CodeGenerator(val file: File, val kotlinTypeMappings: Map<String, Str
             "pbandk.Sizer.tagSize($number) + pbandk.Sizer.packedRepeatedSize($ref, pbandk.Sizer::${type.sizeMethod})"
         repeated ->
             "(pbandk.Sizer.tagSize($number) * $ref.size) + $ref.sumBy(pbandk.Sizer::${type.sizeMethod})"
-        kotlinBytesWrapper != null -> "pbandk.Sizer.tagSize($number) + pbandk.Sizer.${type.sizeMethod}($ref.bytes)"
+        kotlinWrapperType != null -> "pbandk.Sizer.tagSize($number) + pbandk.Sizer.${type.sizeMethod}($ref.value)"
         else -> "pbandk.Sizer.tagSize($number) + pbandk.Sizer.${type.sizeMethod}($ref)"
     }
     protected fun File.Field.Standard.writeExpr(ref: String = fieldRef) = when {
@@ -346,18 +346,22 @@ open class CodeGenerator(val file: File, val kotlinTypeMappings: Map<String, Str
             "protoMarshal.writeTag($tag).writePackedRepeated(" +
                 "$ref, pbandk.Sizer::${type.sizeMethod}, protoMarshal::${type.writeMethod})"
         repeated -> "$ref.forEach { protoMarshal.writeTag($tag).${type.writeMethod}(it) }"
-        kotlinBytesWrapper != null -> "protoMarshal.writeTag($tag).${type.writeMethod}($ref.bytes)"
+        kotlinWrapperType != null -> "protoMarshal.writeTag($tag).${type.writeMethod}($ref.value)"
         else -> "protoMarshal.writeTag($tag).${type.writeMethod}($ref)"
     }
     protected val File.Field.Standard.nonDefaultCheckExpr get() = when {
         repeated -> "$fieldRef.isNotEmpty()"
         file.version == 2 && optional -> "$fieldRef != null"
-        type == File.Field.Type.BOOL -> fieldRef
-        type == File.Field.Type.BYTES && kotlinBytesWrapper == null -> "$fieldRef.array.isNotEmpty()"
-        type == File.Field.Type.BYTES && kotlinBytesWrapper != null -> "$fieldRef.bytes.array.isNotEmpty()"
         type == File.Field.Type.ENUM -> "$fieldRef.value != 0"
-        type == File.Field.Type.STRING -> "$fieldRef.isNotEmpty()"
-        else -> "$fieldRef != ${type.defaultValue}"
+        else -> {
+            val fieldExpr = kotlinWrapperType?.let { "$fieldRef.value" } ?: fieldRef
+            when (type) {
+                File.Field.Type.BOOL -> fieldExpr
+                File.Field.Type.BYTES -> "$fieldExpr.array.isNotEmpty()"
+                File.Field.Type.STRING -> "$fieldExpr.isNotEmpty()"
+                else -> "$fieldExpr != ${type.defaultValue}"
+            }
+        }
     }
     protected val File.Field.Standard.requiresExplicitTypeWithVal get() =
         repeated || (file.version == 2 && optional) || type.requiresExplicitTypeWithVal
