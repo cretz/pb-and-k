@@ -36,7 +36,7 @@ data class File(
             val nestedTypes: List<Type>,
             val mapEntry: Boolean,
             override val kotlinTypeName: String,
-            val kotlinImplements: String?
+            val extensions: KotlinMessageExtensions
         ) : Type()
 
         data class Enum(
@@ -46,6 +46,10 @@ data class File(
         ) : Type() {
             data class Value(val number: Int, val name: String, val kotlinValueName: String)
         }
+
+        class KotlinMessageExtensions(
+            val kotlinImplements: InterfaceDescriptor?
+        )
     }
 
     sealed class Field {
@@ -66,7 +70,7 @@ data class File(
             override val kotlinFieldName: String,
             // This can be null when localTypeName is not null which means it is fully qualified and should be looked up
             val kotlinLocalTypeName: String?,
-            val options: KotlinFieldOptions
+            val extensions: KotlinFieldExtensions
         ) : Field()
 
         data class OneOf(
@@ -86,7 +90,7 @@ data class File(
                 this == File.Field.Type.MESSAGE || this == File.Field.Type.STRING
         }
 
-        class KotlinFieldOptions (
+        class KotlinFieldExtensions (
             val notnull: Boolean,
             private val kotlinWrapperType: String?,
             private val kotlinDate: Boolean,

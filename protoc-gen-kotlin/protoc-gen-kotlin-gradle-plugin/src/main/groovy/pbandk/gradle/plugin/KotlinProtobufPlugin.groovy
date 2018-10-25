@@ -45,6 +45,7 @@ class KotlinProtobufPlugin implements Plugin<Project> {
                         kotlin {
                             option "kotlin_package=${ext.kotlinPackage}"
                             option "kotlin_extra_classpath=${project.configurations.kotlinProtobufExtensions.asPath.replace(':', ';')}"
+                            option "kotlin_extra_sourcepath=${project.sourceSets.main.kotlin.srcDirs.join(';')}"
                         }
                     }
                 }

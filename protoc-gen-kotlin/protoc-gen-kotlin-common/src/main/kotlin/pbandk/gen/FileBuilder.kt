@@ -42,22 +42,28 @@ open class FileBuilder(val namer: Namer = Namer.Standard, val supportMaps: Boole
         ctx: Context,
         msgDesc: DescriptorProto,
         usedTypeNames: MutableSet<String>
-    ): File.Type.Message = File.Type.Message(
-        name = msgDesc.name!!,
-        fields = fieldsFromProto(ctx, msgDesc, usedTypeNames),
-        nestedTypes = typesFromProto(ctx, msgDesc.enumType, msgDesc.nestedType),
-        mapEntry = supportMaps && msgDesc.options?.mapEntry == true,
-        kotlinTypeName = namer.newTypeName(msgDesc.name!!, usedTypeNames),
-        kotlinImplements = msgDesc.options?.kotlinImplements
-    )
+    ): File.Type.Message {
+        val extensions = File.Type.KotlinMessageExtensions(
+            kotlinImplements = msgDesc.options?.kotlinImplements?.let { Platform.describeInterface(ctx, it) }
+        )
 
-    protected fun fieldsFromProto(ctx: Context, msgDesc: DescriptorProto, usedTypeNames: MutableSet<String>) =
+        return File.Type.Message(
+            name = msgDesc.name!!,
+            fields = fieldsFromProto(ctx, msgDesc, usedTypeNames, extensions),
+            nestedTypes = typesFromProto(ctx, msgDesc.enumType, msgDesc.nestedType),
+            mapEntry = supportMaps && msgDesc.options?.mapEntry == true,
+            kotlinTypeName = namer.newTypeName(msgDesc.name!!, usedTypeNames),
+            extensions = extensions
+        )
+    }
+
+    protected fun fieldsFromProto(ctx: Context, msgDesc: DescriptorProto, usedTypeNames: MutableSet<String>, extensions: File.Type.KotlinMessageExtensions) =
         mutableSetOf<Int>().let { seenOneOfIndexes ->
             val usedFieldNames = mutableSetOf<String>()
             msgDesc.field.mapNotNull { field ->
                 // Exclude any group fields
                 if (field.type == FieldDescriptorProto.Type.TYPE_GROUP) null else field.oneofIndex.let { oneOfIndex ->
-                    if (oneOfIndex == null) fromProto(ctx, field, msgDesc, usedFieldNames)
+                    if (oneOfIndex == null) fromProto(ctx, field, msgDesc, usedFieldNames, extensions = extensions)
                     else if (seenOneOfIndexes.add(oneOfIndex)) msgDesc.oneofDecl[oneOfIndex].name?.let { name ->
                         val fieldTypeNames = mutableMapOf<String, String>()
                         File.Field.OneOf(
@@ -65,7 +71,7 @@ open class FileBuilder(val namer: Namer = Namer.Standard, val supportMaps: Boole
                             fields = mutableSetOf<String>().let { usedFieldTypeNames ->
                                 msgDesc.field.filter { it.oneofIndex == field.oneofIndex }.map {
                                     fieldTypeNames += it.name!! to namer.newTypeName(it.name!!, usedFieldTypeNames)
-                                    fromProto(ctx, it, msgDesc, mutableSetOf(), true)
+                                    fromProto(ctx, it, msgDesc, mutableSetOf(), true, extensions)
                                 }
                             },
                             kotlinFieldTypeNames = fieldTypeNames,
@@ -82,7 +88,8 @@ open class FileBuilder(val namer: Namer = Namer.Standard, val supportMaps: Boole
         fieldDesc: FieldDescriptorProto,
         msgDesc: DescriptorProto,
         usedFieldNames: MutableSet<String>,
-        alwaysRequired: Boolean = false
+        alwaysRequired: Boolean = false,
+        extensions: File.Type.KotlinMessageExtensions
     ) = fromProto(fieldDesc.type ?: error("Missing field type")).let { type ->
         val kotlinFieldName = namer.newFieldName(fieldDesc.name!!, usedFieldNames)
         File.Field.Standard(
@@ -101,17 +108,13 @@ open class FileBuilder(val namer: Namer = Namer.Standard, val supportMaps: Boole
             kotlinLocalTypeName =
                 if (fieldDesc.typeName == null || fieldDesc.typeName!!.startsWith('.')) null
                 else namer.newTypeName(fieldDesc.typeName!!, mutableSetOf()),
-            options = File.Field.KotlinFieldOptions(
+            extensions = File.Field.KotlinFieldExtensions(
                 notnull = fieldDesc.options?.kotlinNotnull == true,
                 kotlinDate = fieldDesc.options?.kotlinDate == true,
                 kotlinWrapperType = fieldDesc.options?.kotlinWrapperType,
-                implementsInterfaceProperty = overrides(ctx, kotlinFieldName, msgDesc.options?.kotlinImplements)
+                implementsInterfaceProperty = extensions.kotlinImplements?.let { kotlinFieldName in it.properties } ?: false
             )
         )
-    }
-
-    private fun overrides(ctx: Context, name: String, superinterface: String?): Boolean {
-        return superinterface != null && Platform.interfaceIncludesProperty(ctx, name, superinterface)
     }
 
     protected fun fromProto(type: FieldDescriptorProto.Type) = when (type) {

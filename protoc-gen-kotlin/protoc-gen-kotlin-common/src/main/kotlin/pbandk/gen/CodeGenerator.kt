@@ -43,16 +43,14 @@ open class CodeGenerator(val file: File, val kotlinTypeMappings: Map<String, Str
     protected fun writeMessageType(type: File.Type.Message) {
         var extends = "pbandk.Message<${type.kotlinTypeName}>"
 
-        if (type.kotlinImplements != null) {
-            extends += ", " + type.kotlinImplements
-        }
+        type.extensions.kotlinImplements?.also { extends += ", ${it.name}" }
 
         if (type.mapEntry) extends += ", Map.Entry<${type.mapEntryKeyKotlinType}, ${type.mapEntryValueKotlinType}>"
         line().line("data class ${type.kotlinTypeName}(").indented {
             val fieldBegin = if (type.mapEntry) "override " else ""
             type.fields.forEach { field ->
                 when (field) {
-                    is File.Field.Standard -> lineBegin(fieldBegin).writeConstructorField(field, !field.options.notnull).lineEnd(",")
+                    is File.Field.Standard -> lineBegin(fieldBegin).writeConstructorField(field, !field.extensions.notnull).lineEnd(",")
                     is File.Field.OneOf -> line("val ${field.kotlinFieldName}: ${field.kotlinTypeName}? = null,")
                 }
             }
@@ -65,6 +63,11 @@ open class CodeGenerator(val file: File, val kotlinTypeMappings: Map<String, Str
             line("override operator fun plus(other: ${type.kotlinTypeName}?) = protoMergeImpl(other)")
             line("override val protoSize by lazy { protoSizeImpl() }")
             line("override fun protoMarshal(m: pbandk.Marshaller) = protoMarshalImpl(m)")
+
+            type.extensions.kotlinImplements?.visitorType?.let {
+                line("override fun accept(visitor: $it) = visitor.visit(this)")
+            }
+
             line("companion object : pbandk.Message.Companion<${type.kotlinTypeName}> {").indented {
                 line("override fun protoUnmarshal(u: pbandk.Unmarshaller) = " +
                     "${type.kotlinTypeName}.protoUnmarshalImpl(u)")
@@ -75,7 +78,7 @@ open class CodeGenerator(val file: File, val kotlinTypeMappings: Map<String, Str
     }
 
     protected fun writeConstructorField(field: File.Field.Standard, nullableIfMessage: Boolean): CodeGenerator {
-        val valKeyword = if (field.options.implementsInterfaceProperty) "override val" else "val"
+        val valKeyword = if (field.extensions.implementsInterfaceProperty) "override val" else "val"
         lineMid("${valKeyword} ${field.kotlinFieldName}: ${field.kotlinValueType(nullableIfMessage)}")
         if (field.type != File.Field.Type.MESSAGE || nullableIfMessage) lineMid(" = ${field.defaultValue}")
         return this
@@ -198,7 +201,7 @@ open class CodeGenerator(val file: File, val kotlinTypeMappings: Map<String, Str
                 when (it) {
                     is File.Field.Standard -> {
                         line(it.unmarshalVarDecl)
-                        it.unmarshalVarDone + if (it.options.notnull) "!!" else ""
+                        it.unmarshalVarDone + if (it.extensions.notnull) "!!" else ""
                     }
                     is File.Field.OneOf -> {
                         line("var ${it.kotlinFieldName}: $fullTypeName.${it.kotlinTypeName}? = null")
@@ -278,7 +281,7 @@ open class CodeGenerator(val file: File, val kotlinTypeMappings: Map<String, Str
     protected val File.Field.Standard.kotlinQualifiedTypeName get() =
         kotlinLocalTypeName ?:
             localTypeName?.let { kotlinTypeMappings.getOrElse(it) { error("Unable to find mapping for $it") } } ?:
-        (options.wrapperType ?: type.standardTypeName)
+        (extensions.wrapperType ?: type.standardTypeName)
 
     protected val File.Field.Standard.unmarshalReadExpr get() = type.neverPacked.let { neverPacked ->
         val repEnd = if (neverPacked) ", true" else ", false"
@@ -292,7 +295,7 @@ open class CodeGenerator(val file: File, val kotlinTypeMappings: Map<String, Str
                 else "protoUnmarshal.readRepeatedMessage($kotlinFieldName, $kotlinQualifiedTypeName.Companion$repEnd)"
             else -> {
                 if (repeated) "protoUnmarshal.readRepeated($kotlinFieldName, protoUnmarshal::${type.readMethod}$repEnd)"
-                else if (options.wrapper) "${options.wrapperType}(protoUnmarshal.${type.readMethod}())"
+                else if (extensions.wrapper) "${extensions.wrapperType}(protoUnmarshal.${type.readMethod}())"
                 else "protoUnmarshal.${type.readMethod}()"
             }
         }
@@ -322,7 +325,7 @@ open class CodeGenerator(val file: File, val kotlinTypeMappings: Map<String, Str
         repeated -> "emptyList()"
         file.version == 2 && optional -> "null"
         type == File.Field.Type.ENUM -> "$kotlinQualifiedTypeName.fromValue(0)"
-        options.wrapper -> "${options.wrapperType}(${type.defaultValue})"
+        extensions.wrapper -> "${extensions.wrapperType}(${type.defaultValue})"
         else -> type.defaultValue
     }
     protected val File.Field.Standard.tag get() = (number shl 3) or when {
@@ -336,7 +339,7 @@ open class CodeGenerator(val file: File, val kotlinTypeMappings: Map<String, Str
             "pbandk.Sizer.tagSize($number) + pbandk.Sizer.packedRepeatedSize($ref, pbandk.Sizer::${type.sizeMethod})"
         repeated ->
             "(pbandk.Sizer.tagSize($number) * $ref.size) + $ref.sumBy(pbandk.Sizer::${type.sizeMethod})"
-        options.wrapper -> "pbandk.Sizer.tagSize($number) + pbandk.Sizer.${type.sizeMethod}($ref.${options.wrapperValueProperty})"
+        extensions.wrapper -> "pbandk.Sizer.tagSize($number) + pbandk.Sizer.${type.sizeMethod}($ref.${extensions.wrapperValueProperty})"
         else -> "pbandk.Sizer.tagSize($number) + pbandk.Sizer.${type.sizeMethod}($ref)"
     }
     protected fun File.Field.Standard.writeExpr(ref: String = fieldRef) = when {
@@ -346,7 +349,7 @@ open class CodeGenerator(val file: File, val kotlinTypeMappings: Map<String, Str
             "protoMarshal.writeTag($tag).writePackedRepeated(" +
                 "$ref, pbandk.Sizer::${type.sizeMethod}, protoMarshal::${type.writeMethod})"
         repeated -> "$ref.forEach { protoMarshal.writeTag($tag).${type.writeMethod}(it) }"
-        options.wrapper -> "protoMarshal.writeTag($tag).${type.writeMethod}($ref.${options.wrapperValueProperty})"
+        extensions.wrapper -> "protoMarshal.writeTag($tag).${type.writeMethod}($ref.${extensions.wrapperValueProperty})"
         else -> "protoMarshal.writeTag($tag).${type.writeMethod}($ref)"
     }
     protected val File.Field.Standard.nonDefaultCheckExpr get() = when {
@@ -354,7 +357,7 @@ open class CodeGenerator(val file: File, val kotlinTypeMappings: Map<String, Str
         file.version == 2 && optional -> "$fieldRef != null"
         type == File.Field.Type.ENUM -> "$fieldRef.value != 0"
         else -> {
-            val fieldExpr = if (options.wrapper) "$fieldRef.${options.wrapperValueProperty}" else fieldRef
+            val fieldExpr = if (extensions.wrapper) "$fieldRef.${extensions.wrapperValueProperty}" else fieldRef
             when (type) {
                 File.Field.Type.BOOL -> fieldExpr
                 File.Field.Type.BYTES -> "$fieldExpr.array.isNotEmpty()"
