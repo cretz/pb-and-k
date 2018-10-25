@@ -14,7 +14,7 @@ buildscript {
 
 allprojects {
     group 'com.github.cretz.pbandk'
-    version '0.3.0-toast-8-SNAPSHOT'
+    version '0.3.0-toast-9-SNAPSHOT'
 
     repositories {
         mavenCentral()
