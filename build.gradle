@@ -23,6 +23,10 @@ allprojects {
 
     apply plugin: 'maven-publish'
 
+    if (project.version.endsWith('-SNAPSHOT')) {
+        project.tasks.publish.enabled = false
+    }
+
     publishing {
         repositories {
             maven {
