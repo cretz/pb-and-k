@@ -286,3 +286,17 @@ be built (does not work on Windows). Then both the JS and JVM projects must be b
 Set the `CONF_TEST_PATH` environment variable to the full path to
 `path/to/protobuf/conformance/conformance-test-runner`. The JS tests need to have `npm install` run in
 `conformance/conformance-js`. Then simply run `conformance/test-conformance.sh`.
+
+### Publishing
+
+To publish a new version of this library, tag the release commit:
+```
+git tag <major.minor.patch> -a
+```
+
+Then push with tags:
+```
+git push --follow-tags
+```
+
+Jenkins should automatically build and publish the new version.
