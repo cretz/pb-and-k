@@ -34,7 +34,14 @@ properties([
 
 toastBuild {
     stage('pre-build') {
-        checkout scm
+        checkout([
+            $class: 'GitSCM',
+            branches: scm.branches,
+            doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
+            extensions: scm.extensions + [[$class: 'CloneOption', noTags: false, reference: '', shallow: true]],
+            submoduleCfg: [],
+            userRemoteConfigs: scm.userRemoteConfigs
+        ])
     }
     stage('build') {
         sh(
