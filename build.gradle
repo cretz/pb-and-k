@@ -2,7 +2,6 @@ buildscript {
     ext.kotlin_version = '1.2.71'
     repositories {
         mavenCentral()
-        jcenter()
         maven {
             url 'https://dl.bintray.com/jetbrains/kotlin-native-dependencies'
         }
@@ -10,8 +9,11 @@ buildscript {
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath 'org.jetbrains.kotlin:kotlin-native-gradle-plugin:0.7'
-        classpath 'uk.co.jamesridgway:gradle-gitflow-plugin:1.5.5'
     }
+}
+
+subprojects {
+    version = rootProject.version
 }
 
 allprojects {
@@ -23,35 +25,17 @@ allprojects {
     }
 
     apply plugin: 'maven-publish'
-    apply plugin: 'uk.co.jamesridgway.gradle.gitflow.plugin'
-
-    def isRelease = project.version.toString().trim() ==~ /^\d+\.\d+\.\d+$/
-
-    if (!isRelease) {
-        println("Not publishing version: ${project.version}")
-        project.tasks.publish.enabled = false
-    }
 
     publishing {
         repositories {
             maven {
-                url = "https://artifactory.eng.toasttab.com/artifactory/libs-${version.toString().endsWith('-SNAPSHOT') ? 'snapshot' : 'release'}-local"
+                url = "https://artifactory.eng.toasttab.com/artifactory/libs-${version.snapshot ? 'snapshot' : 'release'}-local"
                 credentials {
                     username = project.properties.getOrDefault("artifactory_user", "")
                     password = project.properties.getOrDefault("artifactory_password", "")
                 }
             }
         }
-    }
-
-    tasks.matching { it.name == "publishMavenJavaPublicationToMavenRepository" }.all {
-        onlyIf { isRelease }
-    }
-}
-
-task printVersion {
-    doLast {
-        println project.version
     }
 }
 

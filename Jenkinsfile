@@ -38,7 +38,7 @@ toastBuild {
             $class: 'GitSCM',
             branches: scm.branches,
             doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
-            extensions: scm.extensions + [[$class: 'CloneOption', noTags: false, reference: '', shallow: true]],
+            extensions: scm.extensions + [[$class: 'CloneOption', noTags: false, reference: '', shallow: false]],
             submoduleCfg: [],
             userRemoteConfigs: scm.userRemoteConfigs
         ])

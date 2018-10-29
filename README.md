@@ -291,12 +291,12 @@ Set the `CONF_TEST_PATH` environment variable to the full path to
 
 To publish a new version of this library, tag the release commit:
 ```
-git tag <major.minor.patch> -a
+git tag <major.minor.patch>
 ```
 
-Then push with tags:
+Then push to master with tags:
 ```
 git push --follow-tags
 ```
 
-Jenkins should automatically build and publish the new version.
+Jenkins will automatically build and publish the new version. If you commit to master without a tag, Jenkins will publish a snapshot to the snapshot repository. To see the version that will be published for a commit, checkout that commit and run `./gradlew printVersion`.
