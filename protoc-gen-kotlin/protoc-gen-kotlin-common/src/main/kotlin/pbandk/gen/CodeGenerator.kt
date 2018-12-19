@@ -322,7 +322,7 @@ open class CodeGenerator(val file: File, val kotlinTypeMappings: Map<String, Str
     }
     protected fun File.Field.Standard.sizeExpr(ref: String = fieldRef) = when {
         map ->
-            "pbandk.Sizer.tagSize($number) + pbandk.Sizer.mapSize($ref, $kotlinQualifiedTypeConstructorRef)"
+            "$ref.map { pbandk.Sizer.messageSize($kotlinQualifiedTypeName(it.key, it.value)) + pbandk.Sizer.tagSize($number) }.sum()"
         repeated && packed ->
             "pbandk.Sizer.tagSize($number) + pbandk.Sizer.packedRepeatedSize($ref, pbandk.Sizer::${type.sizeMethod})"
         repeated ->
@@ -332,7 +332,7 @@ open class CodeGenerator(val file: File, val kotlinTypeMappings: Map<String, Str
     }
     protected fun File.Field.Standard.writeExpr(ref: String = fieldRef) = when {
         map ->
-            "protoMarshal.writeTag($tag).writeMap($ref, $kotlinQualifiedTypeConstructorRef)"
+            "$ref.forEach { protoMarshal.writeTag($tag).${type.writeMethod}($kotlinQualifiedTypeName(it.key, it.value)) }"
         repeated && packed ->
             "protoMarshal.writeTag($tag).writePackedRepeated(" +
                 "$ref, pbandk.Sizer::${type.sizeMethod}, protoMarshal::${type.writeMethod})"
