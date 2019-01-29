@@ -874,7 +874,7 @@ private fun TestAllTypesProto2.Companion.protoUnmarshalImpl(protoUnmarshal: pban
         321, 322 -> repeatedSfixed64 = protoUnmarshal.readRepeated(repeatedSfixed64, protoUnmarshal::readSFixed64, false)
         333, 330 -> repeatedFloat = protoUnmarshal.readRepeated(repeatedFloat, protoUnmarshal::readFloat, false)
         337, 338 -> repeatedDouble = protoUnmarshal.readRepeated(repeatedDouble, protoUnmarshal::readDouble, false)
-        344, 346 -> repeatedBool = protoUnmarshal.readRepeated(repeatedBool, protoUnmarshal::readBool, true)
+        344, 346 -> repeatedBool = protoUnmarshal.readRepeated(repeatedBool, protoUnmarshal::readBool, false)
         354 -> repeatedString = protoUnmarshal.readRepeated(repeatedString, protoUnmarshal::readString, true)
         362 -> repeatedBytes = protoUnmarshal.readRepeated(repeatedBytes, protoUnmarshal::readBytes, true)
         386 -> repeatedNestedMessage = protoUnmarshal.readRepeatedMessage(repeatedNestedMessage, pbandk.conformance.pb.TestAllTypesProto2.NestedMessage.Companion, true)

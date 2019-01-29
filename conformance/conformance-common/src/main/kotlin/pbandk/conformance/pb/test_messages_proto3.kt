@@ -557,7 +557,7 @@ private fun TestAllTypesProto3.protoSizeImpl(): Int {
     if (repeatedSfixed64.isNotEmpty()) protoSize += pbandk.Sizer.tagSize(40) + pbandk.Sizer.packedRepeatedSize(repeatedSfixed64, pbandk.Sizer::sFixed64Size)
     if (repeatedFloat.isNotEmpty()) protoSize += pbandk.Sizer.tagSize(41) + pbandk.Sizer.packedRepeatedSize(repeatedFloat, pbandk.Sizer::floatSize)
     if (repeatedDouble.isNotEmpty()) protoSize += pbandk.Sizer.tagSize(42) + pbandk.Sizer.packedRepeatedSize(repeatedDouble, pbandk.Sizer::doubleSize)
-    if (repeatedBool.isNotEmpty()) protoSize += (pbandk.Sizer.tagSize(43) * repeatedBool.size) + repeatedBool.sumBy(pbandk.Sizer::boolSize)
+    if (repeatedBool.isNotEmpty()) protoSize += pbandk.Sizer.tagSize(43) + pbandk.Sizer.packedRepeatedSize(repeatedBool, pbandk.Sizer::boolSize)
     if (repeatedString.isNotEmpty()) protoSize += (pbandk.Sizer.tagSize(44) * repeatedString.size) + repeatedString.sumBy(pbandk.Sizer::stringSize)
     if (repeatedBytes.isNotEmpty()) protoSize += (pbandk.Sizer.tagSize(45) * repeatedBytes.size) + repeatedBytes.sumBy(pbandk.Sizer::bytesSize)
     if (repeatedNestedMessage.isNotEmpty()) protoSize += (pbandk.Sizer.tagSize(48) * repeatedNestedMessage.size) + repeatedNestedMessage.sumBy(pbandk.Sizer::messageSize)
@@ -683,7 +683,7 @@ private fun TestAllTypesProto3.protoMarshalImpl(protoMarshal: pbandk.Marshaller)
     if (repeatedSfixed64.isNotEmpty()) protoMarshal.writeTag(322).writePackedRepeated(repeatedSfixed64, pbandk.Sizer::sFixed64Size, protoMarshal::writeSFixed64)
     if (repeatedFloat.isNotEmpty()) protoMarshal.writeTag(330).writePackedRepeated(repeatedFloat, pbandk.Sizer::floatSize, protoMarshal::writeFloat)
     if (repeatedDouble.isNotEmpty()) protoMarshal.writeTag(338).writePackedRepeated(repeatedDouble, pbandk.Sizer::doubleSize, protoMarshal::writeDouble)
-    if (repeatedBool.isNotEmpty()) repeatedBool.forEach { protoMarshal.writeTag(344).writeBool(it) }
+    if (repeatedBool.isNotEmpty()) protoMarshal.writeTag(346).writePackedRepeated(repeatedBool, pbandk.Sizer::boolSize, protoMarshal::writeBool)
     if (repeatedString.isNotEmpty()) repeatedString.forEach { protoMarshal.writeTag(354).writeString(it) }
     if (repeatedBytes.isNotEmpty()) repeatedBytes.forEach { protoMarshal.writeTag(362).writeBytes(it) }
     if (repeatedNestedMessage.isNotEmpty()) repeatedNestedMessage.forEach { protoMarshal.writeTag(386).writeMessage(it) }
@@ -946,7 +946,7 @@ private fun TestAllTypesProto3.Companion.protoUnmarshalImpl(protoUnmarshal: pban
         322, 321 -> repeatedSfixed64 = protoUnmarshal.readRepeated(repeatedSfixed64, protoUnmarshal::readSFixed64, false)
         330, 333 -> repeatedFloat = protoUnmarshal.readRepeated(repeatedFloat, protoUnmarshal::readFloat, false)
         338, 337 -> repeatedDouble = protoUnmarshal.readRepeated(repeatedDouble, protoUnmarshal::readDouble, false)
-        344, 346 -> repeatedBool = protoUnmarshal.readRepeated(repeatedBool, protoUnmarshal::readBool, true)
+        346, 344 -> repeatedBool = protoUnmarshal.readRepeated(repeatedBool, protoUnmarshal::readBool, false)
         354 -> repeatedString = protoUnmarshal.readRepeated(repeatedString, protoUnmarshal::readString, true)
         362 -> repeatedBytes = protoUnmarshal.readRepeated(repeatedBytes, protoUnmarshal::readBytes, true)
         386 -> repeatedNestedMessage = protoUnmarshal.readRepeatedMessage(repeatedNestedMessage, pbandk.conformance.pb.TestAllTypesProto3.NestedMessage.Companion, true)
