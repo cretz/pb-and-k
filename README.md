@@ -3,6 +3,8 @@
 PBAndK is a Kotlin code generator and runtime for [Protocol Buffers](https://developers.google.com/protocol-buffers/).
 It is built to work across multiple Kotlin platforms.
 
+**NOTE:** This product is not actively maintained. See https://github.com/streem/pbandk for a more actively maintained fork.
+
 **Features**
 
 * Clean data class generation
@@ -29,6 +31,8 @@ Read below for more information and see the [examples](examples).
 This project is currently in beta yet has the features needed to solve the author's original goals. The "Not Yet
 Implemented" features above will be implemented only if this project garners reasonable interest. If the features are
 implemented, it is possible they may be done in a backwards incompatible way.
+
+**NOTE:** This product is not actively maintained. See https://github.com/streem/pbandk for a more actively maintained fork.
 
 ### Generated Code
 
