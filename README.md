@@ -1,9 +1,9 @@
+### This product is not actively maintained. See [streem/pbandk](https://github.com/streem/pbandk) for a more actively maintained fork.
+
 # PBAndK
 
 PBAndK is a Kotlin code generator and runtime for [Protocol Buffers](https://developers.google.com/protocol-buffers/).
 It is built to work across multiple Kotlin platforms.
-
-**NOTE:** This product is not actively maintained. See https://github.com/streem/pbandk for a more actively maintained fork.
 
 **Features**
 
